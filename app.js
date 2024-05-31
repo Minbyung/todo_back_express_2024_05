@@ -24,6 +24,7 @@ app.use(cors(corsOptions));
 
 app.get("/:user_code/todos", async (req, res) => {
     const { user_code } = req.params;
+
     const [rows] = await pool.query(
         `
         SELECT *
@@ -41,10 +42,40 @@ app.get("/:user_code/todos", async (req, res) => {
     });
 });
 
-app.get("/todos", (req, res) => {
-    res.json([{ id: 1}, { id: 2}]);
+app.get("/:user_code/todos/:no", async (req, res) => {
+    const { user_code, no } = req.params;
+
+    const [[ todoRow ]] = await pool.query(
+        `
+        SELECT *
+        FROM todo
+        WHERE user_code = ?
+        AND no = ?
+        `,
+        [user_code, no]
+    );
+
+    if ( todoRow == undefined ) {
+        res.status(404).json({
+            resultCode: "F-1",
+            msg: "not found",
+        });
+        return;
+    }
+
+    res.json({
+        resultCode: "S-1",
+        msg: "성공",
+        data: todoRow
+    });
 });
 
+
+
+app.get("/todos", (req, res) => {
+    res.json([{ id: 1 }, { id: 2 }]);
+})
+
 app.listen(port, () => {
-    console.log(`Exaple app listening on port ${port}`)
+    console.log(`Example app listening on port ${port}`);
 });
